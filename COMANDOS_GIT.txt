@@ -1,0 +1,168 @@
+# 📝 COMANDOS PARA SUBIR A GITHUB
+# =================================
+
+# PREPARACIÓN INICIAL
+# -------------------
+
+# 1. Inicializar repositorio Git (si no existe)
+git init
+
+# 2. Configurar información del usuario (si es la primera vez)
+git config --global user.name "Tu Nombre"
+git config --global user.email "tuemail@ejemplo.com"
+
+# 3. Añadir todos los archivos
+git add .
+
+# 4. Crear commit inicial
+git commit -m "Initial commit: Proyecto educativo de Redes Neuronales con Gradio"
+
+# 5. Configurar rama principal
+git branch -M main
+
+# 6. Añadir repositorio remoto
+git remote add origin https://github.com/efrenbohorquez/Aprende-sobre-Redes-Neuronales-de-Forma-Interactiva.git
+
+
+# SUBIR A GITHUB
+# --------------
+
+# Opción 1: Si el repositorio está vacío
+git push -u origin main
+
+# Opción 2: Si el repositorio tiene contenido existente
+git pull origin main --allow-unrelated-histories
+git push -u origin main
+
+
+# ACTUALIZACIONES FUTURAS
+# ------------------------
+
+# 1. Ver estado de los archivos
+git status
+
+# 2. Añadir cambios
+git add .
+# o añadir archivo específico
+git add nombre_archivo.py
+
+# 3. Crear commit con mensaje descriptivo
+git commit -m "Update: descripción de los cambios"
+
+# 4. Subir cambios
+git push
+
+
+# COMANDOS ÚTILES
+# ---------------
+
+# Ver historial de commits
+git log --oneline
+
+# Ver diferencias
+git diff
+
+# Ver archivos modificados
+git status
+
+# Deshacer cambios no guardados
+git checkout -- archivo.py
+
+# Crear una nueva rama
+git checkout -b nombre-rama
+
+# Cambiar de rama
+git checkout nombre-rama
+
+# Fusionar rama
+git merge nombre-rama
+
+# Ver ramas
+git branch
+
+
+# SOLUCIÓN DE PROBLEMAS
+# ----------------------
+
+# Si olvidaste añadir archivos al último commit
+git add archivo_olvidado.py
+git commit --amend --no-edit
+
+# Si necesitas cambiar el mensaje del último commit
+git commit --amend -m "Nuevo mensaje"
+
+# Si necesitas eliminar el último commit (SIN perder cambios)
+git reset --soft HEAD~1
+
+# Si necesitas eliminar el último commit (CON pérdida de cambios)
+git reset --hard HEAD~1
+
+# Si hay conflictos al hacer pull
+git pull origin main --allow-unrelated-histories
+# Resolver conflictos manualmente
+git add .
+git commit -m "Merge: resolver conflictos"
+git push
+
+
+# VERIFICAR CONFIGURACIÓN
+# -----------------------
+
+# Ver configuración actual
+git config --list
+
+# Ver remote configurado
+git remote -v
+
+# Verificar rama actual
+git branch
+
+
+# CLONAR PROYECTO (para otros usuarios)
+# --------------------------------------
+
+git clone https://github.com/efrenbohorquez/Aprende-sobre-Redes-Neuronales-de-Forma-Interactiva.git
+cd Aprende-sobre-Redes-Neuronales-de-Forma-Interactiva
+python -m venv .venv
+# Windows
+.\.venv\Scripts\activate
+# macOS/Linux
+source .venv/bin/activate
+pip install -r requirements.txt
+python main.py
+
+
+# NOTAS IMPORTANTES
+# -----------------
+
+# ✅ Siempre hacer 'git pull' antes de 'git push'
+# ✅ Escribir mensajes de commit descriptivos
+# ✅ Hacer commits pequeños y frecuentes
+# ✅ No subir archivos grandes (modelos entrenados, datasets)
+# ✅ Usar .gitignore para excluir archivos innecesarios
+# ✅ Revisar cambios con 'git diff' antes de hacer commit
+
+
+# CONVENCIONES DE COMMITS
+# ------------------------
+
+# Add: Nueva funcionalidad
+git commit -m "Add: nueva visualización de CNN"
+
+# Fix: Corrección de bug
+git commit -m "Fix: error en función de activación"
+
+# Update: Actualización de funcionalidad existente
+git commit -m "Update: mejorar rendimiento de backpropagation"
+
+# Docs: Cambios en documentación
+git commit -m "Docs: actualizar README con ejemplos"
+
+# Refactor: Refactorización de código
+git commit -m "Refactor: reorganizar estructura de clases"
+
+# Style: Cambios de formato
+git commit -m "Style: formatear código según PEP 8"
+
+# Test: Añadir o modificar tests
+git commit -m "Test: añadir pruebas para neurona simple"
