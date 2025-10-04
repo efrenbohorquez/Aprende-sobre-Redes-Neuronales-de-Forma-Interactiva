@@ -1,3 +1,24 @@
+"""
+Ejemplos Avanzados de Redes Neuronales.
+
+Este módulo contiene implementaciones avanzadas de redes neuronales profundas,
+incluyendo Redes Neuronales Convolucionales (CNN) y Redes Neuronales Recurrentes (RNN).
+
+Autor: Efren Bohorquez
+Repositorio: https://github.com/efrenbohorquez/Aprende-sobre-Redes-Neuronales-de-Forma-Interactiva
+Licencia: MIT
+Fecha: Octubre 2025
+
+Clases:
+    EjemplosAvanzados: Clase principal que implementa ejemplos de CNN y RNN.
+
+Dependencias:
+    - numpy: Operaciones numéricas y matriciales
+    - matplotlib: Visualización de gráficos
+    - tensorflow/keras: Framework de deep learning
+    - gradio: Interfaz de usuario web interactiva
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -5,15 +26,87 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import gradio as gr
 
+
 class EjemplosAvanzados:
-    """Ejemplos más avanzados de redes neuronales"""
+    """
+    Clase que implementa ejemplos avanzados de redes neuronales.
+    
+    Esta clase proporciona implementaciones didácticas de arquitecturas avanzadas
+    de redes neuronales, incluyendo CNN para clasificación de imágenes y RNN
+    para análisis de secuencias. Está diseñada con fines educativos, priorizando
+    la claridad y comprensión sobre la eficiencia computacional.
+    
+    Attributes:
+        model_mnist (keras.Model): Modelo CNN entrenado para clasificar dígitos MNIST.
+            Inicialmente None hasta que se entrena con crear_cnn_mnist().
+        history (keras.callbacks.History): Historial de entrenamiento del modelo.
+            Contiene métricas como precisión y pérdida por época.
+    
+    Métodos:
+        crear_cnn_mnist(epochs): Crea y entrena una CNN para clasificar dígitos.
+        clasificar_imagen_upload(imagen): Clasifica una imagen subida por el usuario.
+        crear_rnn_texto(): Muestra ejemplo conceptual de RNN para análisis de sentimientos.
+    
+    Ejemplo:
+        >>> ejemplos = EjemplosAvanzados()
+        >>> fig, info = ejemplos.crear_cnn_mnist(epochs=5)
+        >>> # Ahora el modelo está entrenado y listo para clasificar
+        >>> fig_pred, resultado = ejemplos.clasificar_imagen_upload(imagen)
+    """
     
     def __init__(self):
+        """
+        Inicializa la clase EjemplosAvanzados.
+        
+        Crea una nueva instancia con los atributos del modelo inicializados a None.
+        El modelo debe ser entrenado usando crear_cnn_mnist() antes de poder
+        usarse para clasificación.
+        """
         self.model_mnist = None
         self.history = None
     
     def crear_cnn_mnist(self, epochs=5):
-        """Crea y entrena una CNN para clasificar dígitos MNIST"""
+        """
+        Crea y entrena una Red Neuronal Convolucional para clasificar dígitos MNIST.
+        
+        Este método construye una CNN con 3 capas convolucionales, entrena el modelo
+        con un subconjunto del dataset MNIST, y genera visualizaciones del proceso
+        de entrenamiento y ejemplos de clasificación.
+        
+        Args:
+            epochs (int, optional): Número de épocas de entrenamiento. Por defecto 5.
+                Más épocas generalmente mejoran la precisión pero incrementan el tiempo.
+        
+        Returns:
+            tuple: Una tupla conteniendo:
+                - fig (matplotlib.figure.Figure): Figura con 4 subgráficas mostrando
+                  precisión, pérdida, y ejemplos de dígitos clasificados.
+                - info (str): Texto formateado con información detallada sobre la
+                  arquitectura del modelo, resultados y explicación didáctica.
+        
+        Raises:
+            Exception: Si hay problemas al cargar el dataset MNIST o durante el
+                entrenamiento del modelo.
+        
+        Notas:
+            - Usa solo 1000 muestras de entrenamiento para demostración rápida
+            - Evalúa con 200 muestras de test para mantener tiempos razonables
+            - Actualiza self.model_mnist y self.history para uso posterior
+            - Las imágenes MNIST son de 28x28 píxeles en escala de grises
+        
+        Arquitectura de la CNN:
+            1. Conv2D(32, 3x3) + ReLU + MaxPooling(2x2)
+            2. Conv2D(64, 3x3) + ReLU + MaxPooling(2x2)
+            3. Conv2D(64, 3x3) + ReLU
+            4. Flatten
+            5. Dense(64) + ReLU
+            6. Dense(10) + Softmax (clasificación 10 dígitos)
+        
+        Ejemplo:
+            >>> ejemplos = EjemplosAvanzados()
+            >>> figura, descripcion = ejemplos.crear_cnn_mnist(epochs=10)
+            >>> print(descripcion)  # Muestra arquitectura y resultados
+        """
         
         # Cargar datos MNIST
         (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
@@ -119,7 +212,48 @@ class EjemplosAvanzados:
         """
     
     def clasificar_imagen_upload(self, imagen):
-        """Clasifica una imagen subida por el usuario"""
+        """
+        Clasifica una imagen de dígito subida por el usuario usando el modelo CNN entrenado.
+        
+        Este método toma una imagen proporcionada por el usuario, la preprocesa para
+        que coincida con el formato esperado por el modelo MNIST, realiza la predicción
+        y genera visualizaciones de los resultados.
+        
+        Args:
+            imagen (PIL.Image.Image or None): Imagen subida por el usuario. Debe ser
+                una imagen que contenga un dígito del 0 al 9. Será convertida a escala
+                de grises y redimensionada a 28x28 píxeles automáticamente.
+        
+        Returns:
+            tuple or str: Si todo es correcto, devuelve una tupla con:
+                - fig (matplotlib.figure.Figure): Visualización con la imagen procesada
+                  y un gráfico de barras mostrando las probabilidades de cada dígito.
+                - info (str): Texto con la predicción, nivel de confianza y explicación.
+                
+                Si hay error, devuelve un string con el mensaje de error.
+        
+        Raises:
+            Exception: Captura y devuelve como string cualquier error durante el
+                procesamiento o clasificación de la imagen.
+        
+        Notas:
+            - Requiere que el modelo esté entrenado (self.model_mnist no sea None)
+            - La imagen se convierte automáticamente a escala de grises
+            - Se normaliza dividiendo entre 255.0 para valores en rango [0, 1]
+            - Funciona mejor con imágenes de dígitos escritos con trazo grueso
+        
+        Preprocesamiento:
+            1. Conversión a escala de grises (modo 'L')
+            2. Redimensionamiento a 28x28 píxeles
+            3. Normalización de valores [0-255] a [0-1]
+            4. Reshape a (1, 28, 28, 1) para el modelo
+        
+        Ejemplo:
+            >>> from PIL import Image
+            >>> imagen = Image.open('digito.png')
+            >>> fig, resultado = ejemplos.clasificar_imagen_upload(imagen)
+            >>> print(resultado)  # "Predicción: 7, Confianza: 95.3%"
+        """
         if imagen is None or self.model_mnist is None:
             return "Por favor, entrena el modelo primero y sube una imagen."
         
@@ -163,7 +297,54 @@ class EjemplosAvanzados:
             return f"Error al procesar la imagen: {str(e)}"
     
     def crear_rnn_texto(self):
-        """Ejemplo simple de RNN para análisis de sentimientos"""
+        """
+        Crea una visualización conceptual de RNN para análisis de sentimientos.
+        
+        Este método genera una demostración didáctica de cómo funcionan las Redes
+        Neuronales Recurrentes (RNN) en el contexto de análisis de sentimientos en texto.
+        NO entrena un modelo real, sino que proporciona visualizaciones educativas
+        sobre la arquitectura y funcionamiento de las RNN.
+        
+        Returns:
+            tuple: Una tupla conteniendo:
+                - fig (matplotlib.figure.Figure): Figura con 4 subgráficas mostrando:
+                    1. Arquitectura de la RNN procesando una secuencia de palabras
+                    2. Distribución de sentimientos en datos de ejemplo
+                    3. Simulación de curva de entrenamiento
+                    4. Ejemplos de predicciones con niveles de confianza
+                - info (str): Texto explicativo sobre características, aplicaciones
+                  y ventajas de las RNN en procesamiento de lenguaje natural.
+        
+        Características Visualizadas:
+            - Flujo de datos a través de células RNN
+            - Conexiones recurrentes (memoria temporal)
+            - Proceso de clasificación de sentimientos
+            - Progreso simulado de entrenamiento
+        
+        Conceptos Educativos:
+            - Procesamiento secuencial de texto
+            - Memoria de estados anteriores
+            - Clasificación positivo/negativo
+            - Aplicaciones en NLP (Natural Language Processing)
+        
+        Notas:
+            - Este método es puramente educativo y no entrena un modelo real
+            - Los datos de ejemplo son ficticios para demostración
+            - La curva de entrenamiento es simulada matemáticamente
+            - Útil para entender conceptos antes de implementar RNN reales
+        
+        Aplicaciones Mencionadas:
+            - Análisis de sentimientos en redes sociales
+            - Traducción automática de idiomas
+            - Reconocimiento de voz y audio
+            - Predicción de series temporales
+            - Generación de texto
+        
+        Ejemplo:
+            >>> ejemplos = EjemplosAvanzados()
+            >>> fig_rnn, explicacion = ejemplos.crear_rnn_texto()
+            >>> print(explicacion)  # Muestra características y aplicaciones
+        """
         
         # Datos de ejemplo simple
         textos = [
@@ -269,5 +450,5 @@ class EjemplosAvanzados:
         - Flexibles para diferentes tipos de entrada
         """
 
-# Crear instancia
+# Crear instancia global para uso en la interfaz Gradio
 ejemplos_avanzados = EjemplosAvanzados()
