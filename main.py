@@ -361,6 +361,277 @@ class RedNeuronalEducativa:
         plt.tight_layout()
         return fig
     
+    def demostrar_callbacks_optimizacion(self, tecnica_seleccionada, epochs=50):
+        """
+        Demuestra técnicas de optimización y callbacks para entrenamiento de redes neuronales.
+        
+        Este método visualiza diferentes estrategias de optimización como Early Stopping,
+        Learning Rate Scheduling, y Model Checkpointing para mejorar el entrenamiento.
+        
+        Args:
+            tecnica_seleccionada (str): Técnica a demostrar ("Early Stopping", "Learning Rate Decay", 
+                                       "Reducir LR en Plateau", "Todas las Técnicas")
+            epochs (int): Número de épocas para la simulación
+        
+        Returns:
+            tuple: Figura con visualizaciones y texto explicativo
+        """
+        fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+        fig.suptitle(f'Callbacks y Optimización: {tecnica_seleccionada}', fontsize=16, weight='bold')
+        
+        epochs_range = np.arange(1, epochs + 1)
+        
+        # Simular datos de entrenamiento básicos
+        np.random.seed(42)
+        base_train_loss = 2.5 * np.exp(-epochs_range/15) + 0.1 + 0.05 * np.random.randn(epochs)
+        base_val_loss = 2.8 * np.exp(-epochs_range/18) + 0.15 + 0.08 * np.random.randn(epochs)
+        
+        # === Gráfica 1: Early Stopping ===
+        ax1 = axes[0, 0]
+        
+        if tecnica_seleccionada in ["Early Stopping", "Todas las Técnicas"]:
+            # Simular early stopping
+            best_epoch = 25
+            train_loss_es = base_train_loss.copy()
+            val_loss_es = base_val_loss.copy()
+            # Simular overfitting después del mejor punto
+            val_loss_es[best_epoch:] += np.linspace(0, 0.3, epochs - best_epoch)
+            
+            ax1.plot(epochs_range, train_loss_es, 'b-', label='Pérdida Entrenamiento', linewidth=2)
+            ax1.plot(epochs_range, val_loss_es, 'r-', label='Pérdida Validación', linewidth=2)
+            ax1.axvline(x=best_epoch, color='green', linestyle='--', linewidth=2, label=f'Early Stop (época {best_epoch})')
+            ax1.scatter([best_epoch], [val_loss_es[best_epoch-1]], color='green', s=200, zorder=5, marker='*')
+            
+            info_es = f"""
+**Early Stopping Activado:**
+- Mejor época: {best_epoch}
+- Paciencia: 5 épocas
+- Evita overfitting
+- Ahorra tiempo de entrenamiento
+"""
+        else:
+            ax1.plot(epochs_range, base_train_loss, 'b-', label='Entrenamiento', linewidth=2)
+            ax1.plot(epochs_range, base_val_loss, 'r-', label='Validación', linewidth=2)
+            info_es = "Early Stopping no aplicado"
+        
+        ax1.set_xlabel('Épocas')
+        ax1.set_ylabel('Pérdida')
+        ax1.set_title('Early Stopping: Detener cuando deja de mejorar')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+        
+        # === Gráfica 2: Learning Rate Decay ===
+        ax2 = axes[0, 1]
+        
+        if tecnica_seleccionada in ["Learning Rate Decay", "Todas las Técnicas"]:
+            # Simular decay exponencial
+            initial_lr = 0.1
+            decay_rate = 0.95
+            lr_exponential = initial_lr * (decay_rate ** epochs_range)
+            
+            # Simular decay escalonado
+            lr_step = np.ones(epochs) * initial_lr
+            lr_step[10:20] = initial_lr * 0.5
+            lr_step[20:30] = initial_lr * 0.25
+            lr_step[30:40] = initial_lr * 0.125
+            lr_step[40:] = initial_lr * 0.0625
+            
+            ax2.plot(epochs_range, lr_exponential, 'g-', label='Decay Exponencial', linewidth=2)
+            ax2.plot(epochs_range, lr_step, 'orange', label='Decay Escalonado', linewidth=2, linestyle='--')
+            
+            info_lr = f"""
+**Learning Rate Decay:**
+- LR inicial: {initial_lr}
+- Tasa de decay: {decay_rate}
+- Permite ajustes finos al final
+- Mejora convergencia
+"""
+        else:
+            constant_lr = np.ones(epochs) * 0.01
+            ax2.plot(epochs_range, constant_lr, 'b-', label='LR Constante', linewidth=2)
+            info_lr = "Learning Rate constante (sin decay)"
+        
+        ax2.set_xlabel('Épocas')
+        ax2.set_ylabel('Learning Rate')
+        ax2.set_title('Learning Rate Decay: Reducción gradual del LR')
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+        ax2.set_yscale('log')
+        
+        # === Gráfica 3: ReduceLROnPlateau ===
+        ax3 = axes[1, 0]
+        
+        if tecnica_seleccionada in ["Reducir LR en Plateau", "Todas las Técnicas"]:
+            # Simular pérdida con plateaus
+            loss_plateau = np.concatenate([
+                2.0 - np.linspace(0, 1.0, 15),  # Mejora inicial
+                1.0 + 0.05 * np.random.randn(10),  # Plateau 1
+                1.0 - np.linspace(0, 0.4, 10),  # Mejora después de reducir LR
+                0.6 + 0.03 * np.random.randn(10),  # Plateau 2
+                0.6 - np.linspace(0, 0.2, epochs - 45)  # Mejora final
+            ])
+            
+            # Marcar puntos donde se reduce LR
+            reduce_points = [25, 35]
+            
+            ax3.plot(epochs_range, loss_plateau, 'purple', linewidth=2, label='Pérdida de Validación')
+            for point in reduce_points:
+                ax3.axvline(x=point, color='red', linestyle='--', alpha=0.7, label=f'LR reducido' if point == reduce_points[0] else '')
+                ax3.scatter([point], [loss_plateau[point-1]], color='red', s=150, zorder=5)
+            
+            info_plateau = f"""
+**ReduceLR On Plateau:**
+- Factor de reducción: 0.5
+- Paciencia: 5 épocas
+- Reduce LR cuando no mejora
+- Adaptativo al entrenamiento
+"""
+        else:
+            ax3.plot(epochs_range, base_val_loss, 'b-', linewidth=2)
+            info_plateau = "ReduceLR no aplicado"
+        
+        ax3.set_xlabel('Épocas')
+        ax3.set_ylabel('Pérdida de Validación')
+        ax3.set_title('ReduceLR On Plateau: LR adaptativo según progreso')
+        ax3.legend()
+        ax3.grid(True, alpha=0.3)
+        
+        # === Gráfica 4: Comparación de Técnicas ===
+        ax4 = axes[1, 1]
+        
+        # Simular resultados finales con diferentes técnicas
+        tecnicas = ['Sin\nOptimización', 'Early\nStopping', 'LR Decay', 'ReduceLR\nPlateau', 'Todas\nCombinadas']
+        val_accuracy = [0.75, 0.82, 0.84, 0.83, 0.89]
+        train_time = [100, 60, 100, 95, 65]  # Tiempo relativo
+        
+        x_pos = np.arange(len(tecnicas))
+        bars = ax4.bar(x_pos, val_accuracy, color=['gray', 'green', 'blue', 'purple', 'gold'], alpha=0.7)
+        
+        # Añadir etiquetas de tiempo
+        for i, (bar, time) in enumerate(zip(bars, train_time)):
+            height = bar.get_height()
+            ax4.text(bar.get_x() + bar.get_width()/2., height + 0.01,
+                    f'{val_accuracy[i]:.2f}\n({time}%)',
+                    ha='center', va='bottom', fontsize=9)
+        
+        ax4.set_xlabel('Técnica de Optimización')
+        ax4.set_ylabel('Precisión en Validación')
+        ax4.set_title('Comparación de Técnicas (Precisión y Tiempo)')
+        ax4.set_xticks(x_pos)
+        ax4.set_xticklabels(tecnicas, rotation=0, ha='center')
+        ax4.set_ylim(0.7, 0.95)
+        ax4.grid(True, alpha=0.3, axis='y')
+        
+        plt.tight_layout()
+        
+        # Generar explicación detallada
+        explicacion = f"""
+## 🎯 Callbacks y Técnicas de Optimización
+
+### Técnica Seleccionada: **{tecnica_seleccionada}**
+
+---
+
+### 📊 **1. Early Stopping**
+{info_es}
+
+**¿Cuándo usar?**
+- Cuando hay riesgo de overfitting
+- Para ahorrar tiempo de entrenamiento
+- En datasets pequeños
+
+**Código ejemplo:**
+```python
+from tensorflow.keras.callbacks import EarlyStopping
+
+early_stop = EarlyStopping(
+    monitor='val_loss',
+    patience=5,
+    restore_best_weights=True
+)
+```
+
+---
+
+### 📉 **2. Learning Rate Decay**
+{info_lr}
+
+**¿Cuándo usar?**
+- En entrenamientos largos
+- Para ajuste fino al final
+- Cuando la pérdida oscila
+
+**Código ejemplo:**
+```python
+from tensorflow.keras.callbacks import LearningRateScheduler
+
+def scheduler(epoch, lr):
+    return lr * 0.95
+    
+lr_decay = LearningRateScheduler(scheduler)
+```
+
+---
+
+### 🔄 **3. ReduceLR On Plateau**
+{info_plateau}
+
+**¿Cuándo usar?**
+- Cuando no sabes el mejor LR
+- En problemas complejos
+- Para adaptación automática
+
+**Código ejemplo:**
+```python
+from tensorflow.keras.callbacks import ReduceLROnPlateau
+
+reduce_lr = ReduceLROnPlateau(
+    monitor='val_loss',
+    factor=0.5,
+    patience=5,
+    min_lr=1e-7
+)
+```
+
+---
+
+### 💾 **4. Model Checkpoint (Bonus)**
+
+Guarda el mejor modelo durante el entrenamiento:
+
+```python
+from tensorflow.keras.callbacks import ModelCheckpoint
+
+checkpoint = ModelCheckpoint(
+    'best_model.h5',
+    monitor='val_accuracy',
+    save_best_only=True
+)
+```
+
+---
+
+### 🎓 **Mejores Prácticas:**
+
+1. **Combina callbacks**: Early Stopping + ReduceLR funciona muy bien
+2. **Monitorea val_loss**: No solo la precisión
+3. **Ajusta la paciencia**: Más paciencia para datasets grandes
+4. **Guarda checkpoints**: Siempre guarda el mejor modelo
+5. **Experimenta**: Prueba diferentes combinaciones
+
+---
+
+### 📈 **Resultados Esperados:**
+
+- **Sin optimización**: Riesgo de overfitting, tiempo desperdiciado
+- **Con callbacks**: Mejor generalización, entrenamiento eficiente
+- **Combinadas**: Óptimo rendimiento y tiempo
+
+**¡Las callbacks son esenciales para entrenar modelos profesionales!** 🚀
+"""
+        
+        return fig, explicacion
+    
     # Métodos wrapper para ejemplos avanzados (cargan TensorFlow solo cuando se usan)
     def entrenar_cnn(self, epochs):
         """Wrapper para entrenar CNN"""
@@ -524,7 +795,59 @@ with gr.Blocks(title="🧠 Redes Neuronales Interactivas") as demo:
             btn_mostrar_rnn.click(red_educativa.mostrar_rnn,
                                 outputs=[plot_rnn, resultado_rnn])
         
-        # Tab 7: Recursos Adicionales
+        # Tab 7: Callbacks y Optimización
+        with gr.Tab("⚙️ Callbacks y Optimización"):
+            gr.Markdown("## Técnicas avanzadas para mejorar el entrenamiento de redes neuronales")
+            
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown("""
+                    ### ¿Qué son los Callbacks?
+                    
+                    Los **callbacks** son funciones que se ejecutan durante el entrenamiento para:
+                    - **Monitorear** el progreso
+                    - **Ajustar** hiperparámetros automáticamente
+                    - **Detener** el entrenamiento cuando es apropiado
+                    - **Guardar** el mejor modelo
+                    
+                    Son esenciales para entrenar modelos de forma eficiente y profesional.
+                    """)
+                    
+                    tecnica_callback = gr.Radio(
+                        choices=[
+                            "Early Stopping",
+                            "Learning Rate Decay", 
+                            "Reducir LR en Plateau",
+                            "Todas las Técnicas"
+                        ],
+                        value="Todas las Técnicas",
+                        label="Selecciona la técnica a explorar"
+                    )
+                    
+                    epochs_callback = gr.Slider(
+                        minimum=20,
+                        maximum=100,
+                        value=50,
+                        step=5,
+                        label="Épocas de simulación"
+                    )
+                    
+                    btn_demostrar_callbacks = gr.Button(
+                        "🚀 Demostrar Técnicas de Optimización",
+                        variant="primary"
+                    )
+                
+                with gr.Column():
+                    plot_callbacks = gr.Plot()
+                    resultado_callbacks = gr.Markdown()
+            
+            btn_demostrar_callbacks.click(
+                red_educativa.demostrar_callbacks_optimizacion,
+                inputs=[tecnica_callback, epochs_callback],
+                outputs=[plot_callbacks, resultado_callbacks]
+            )
+        
+        # Tab 8: Recursos Adicionales
         with gr.Tab("📚 Recursos"):
             gr.Markdown("""
             ## 📖 Aprende Más sobre Redes Neuronales
@@ -538,6 +861,7 @@ with gr.Blocks(title="🧠 Redes Neuronales Interactivas") as demo:
             5. **Backpropagation**: Algoritmo que permite el aprendizaje automático
             6. **CNN**: Especializadas en procesamiento de imágenes
             7. **RNN**: Ideales para datos secuenciales como texto
+            8. **Callbacks**: Técnicas para optimizar y controlar el entrenamiento
             
             ### 🚀 Próximos Pasos:
             
@@ -563,6 +887,8 @@ with gr.Blocks(title="🧠 Redes Neuronales Interactivas") as demo:
             4. **Datos complejos**: Prueba la red con círculos concéntricos
             5. **CNN personalizada**: Entrena con diferentes números de épocas
             6. **Análisis de errores**: ¿Qué tipos de dígitos confunde más la CNN?
+            7. **Optimización**: Compara diferentes combinaciones de callbacks
+            8. **Learning Rate**: ¿Cómo afecta el LR al tiempo de convergencia?
             """)
 
 if __name__ == "__main__":
